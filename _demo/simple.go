@@ -6,7 +6,7 @@ package main
 // and launch a console that takes up the initial size
 // of the terminal.
 
-import  (
+import (
 	"os"
 
 	tb "github.com/nsf/termbox-go"
@@ -16,9 +16,9 @@ import  (
 
 func main() {
 
-	// Attempt to initialize the termbox. 
+	// Attempt to initialize the termbox.
 	if err := tb.Init(); err != nil {
-		os.Exit(1)	
+		os.Exit(1)
 	}
 
 	// Clear the termbox.

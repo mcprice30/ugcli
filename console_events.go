@@ -21,6 +21,10 @@ func (c *Console) Run() {
 
 	oldLineCopy := ""
 
+	if c.executer == nil {
+		c.executer = DefaultExecuter(c)
+	}
+
 	for running {
 
 		if err := tb.Flush(); err != nil {
@@ -30,56 +34,56 @@ func (c *Console) Run() {
 		event := tb.PollEvent()
 		if event.Type == tb.EventKey {
 			switch event.Key {
-				case 0:
-					c.writeChar(event.Ch)
-					currline += string(event.Ch)
-				case tb.KeySpace:
-					c.writeChar(' ')
-					currline += " "
-				case tb.KeyEnter:
-					c.Println("")
-					running = c.executeLine(currline)
-					c.Print(c.prompt)
-					lineBuffer[bufferIdx % buffer_size] = currline
-					bufferIdx++
-					currline = ""
-					diff = 0
-					oldLineCopy = ""
-				case tb.KeyCtrlC:
-					running = false
-				case tb.KeyBackspace, tb.KeyBackspace2:
-					if len(currline) > 0 {
+			case 0:
+				c.writeChar(event.Ch)
+				currline += string(event.Ch)
+			case tb.KeySpace:
+				c.writeChar(' ')
+				currline += " "
+			case tb.KeyEnter:
+				c.Println("")
+				_, running = c.executer.Execute(currline)
+				c.Print(c.prompt)
+				lineBuffer[bufferIdx%buffer_size] = currline
+				bufferIdx++
+				currline = ""
+				diff = 0
+				oldLineCopy = ""
+			case tb.KeyCtrlC:
+				running = false
+			case tb.KeyBackspace, tb.KeyBackspace2:
+				if len(currline) > 0 {
+					c.backspace()
+					currline = currline[:len(currline)-1]
+				}
+			case tb.KeyArrowUp:
+				if buffer_size+diff > 0 && bufferIdx+diff > 0 {
+					if diff == 0 {
+						oldLineCopy = currline
+					}
+					diff--
+					for _ = range currline {
 						c.backspace()
-						currline = currline[:len(currline)-1]
 					}
-				case tb.KeyArrowUp:
-					if buffer_size + diff > 0 && bufferIdx + diff > 0 {
-						if diff == 0 {
-							oldLineCopy = currline
-						}
-						diff--
-						for _ = range currline {
-							c.backspace()
-						}
-						currline = lineBuffer[(bufferIdx + diff) % buffer_size]
-						c.Print(currline)
-				  }
-				case tb.KeyArrowDown:
-					if diff < -1 {
-						diff++
-						for _ = range currline {
-							c.backspace()
-						}
-						currline = lineBuffer[(bufferIdx + diff) % buffer_size]
-						c.Print(currline)
-					} else if diff == -1 {
-						diff++
-						for _ = range currline {
-							c.backspace()
-						}
-						currline = oldLineCopy
-						c.Print(currline)
+					currline = lineBuffer[(bufferIdx+diff)%buffer_size]
+					c.Print(currline)
+				}
+			case tb.KeyArrowDown:
+				if diff < -1 {
+					diff++
+					for _ = range currline {
+						c.backspace()
 					}
+					currline = lineBuffer[(bufferIdx+diff)%buffer_size]
+					c.Print(currline)
+				} else if diff == -1 {
+					diff++
+					for _ = range currline {
+						c.backspace()
+					}
+					currline = oldLineCopy
+					c.Print(currline)
+				}
 			}
 		}
 	}

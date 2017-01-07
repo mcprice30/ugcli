@@ -42,7 +42,9 @@ func (c *Console) Run() {
 				currline += " "
 			case tb.KeyEnter:
 				c.Println("")
-				_, running = c.executer.Execute(currline)
+				if c.executer != nil {
+					_, running = c.executer.Execute(currline)
+				}
 				c.Print(c.prompt)
 				lineBuffer[bufferIdx%buffer_size] = currline
 				bufferIdx++
@@ -83,6 +85,31 @@ func (c *Console) Run() {
 					}
 					currline = oldLineCopy
 					c.Print(currline)
+				}
+			case tb.KeyTab:
+				if c.completer != nil {
+					prefix, options := c.completer.Complete(currline)
+
+					if len(options) > 1 {
+						for _ = range currline {
+							c.backspace()
+						}
+						currline = prefix
+						c.Print(currline)
+						c.Println("")
+						for _, option := range options {
+							c.Println(option)
+						}
+						c.Print(c.prompt)
+						c.Print(currline)
+					} else if len(options) == 1 {
+						for _ = range currline {
+							c.backspace()
+						}
+						currline = prefix
+						c.Print(currline)
+					}
+
 				}
 			}
 		}

@@ -30,6 +30,10 @@ func main() {
 	w, h := tb.Size()
 	con := ugcli.NewConsole(0, 0, w, h)
 
+	completer := ugcli.CreateListCompleter([]string{"a", "ab", "abc", "bad", "carrot", "jane", "jack"})
+
+	con.SetCompleter(completer)
+
 	// Launch the terminal.
 	con.Run()
 

@@ -39,3 +39,7 @@ func NewConsole(top, left, width, height int) *Console {
 func (c *Console) SetExecuter(e Executer) {
 	c.executer = e
 }
+
+func (c *Console) SetCompleter(comp Completer) {
+	c.completer = comp
+}

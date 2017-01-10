@@ -2,30 +2,24 @@
 package ugcli
 
 import (
+	"sort"
+
 	tb "github.com/nsf/termbox-go"
 )
 
-const buffer_size = 100
+const column_pad = 2
 
 // Call this to launch the console. Main activity loop for
 // the console.
 func (c *Console) Run() {
-	running := true
 
 	c.Print(c.prompt)
-
-	currline := ""
-	lineBuffer := make([]string, buffer_size)
-	bufferIdx := 0
-	diff := 0
-
-	oldLineCopy := ""
 
 	if c.executer == nil {
 		c.executer = DefaultExecuter(c)
 	}
 
-	for running {
+	for c.running {
 
 		if err := tb.Flush(); err != nil {
 			panic(err)
@@ -36,82 +30,115 @@ func (c *Console) Run() {
 			switch event.Key {
 			case 0:
 				c.writeChar(event.Ch)
-				currline += string(event.Ch)
+				c.currline += string(event.Ch)
 			case tb.KeySpace:
 				c.writeChar(' ')
-				currline += " "
+				c.currline += " "
 			case tb.KeyEnter:
-				c.Println("")
-				if c.executer != nil {
-					_, running = c.executer.Execute(currline)
-				}
-				c.Print(c.prompt)
-				lineBuffer[bufferIdx%buffer_size] = currline
-				bufferIdx++
-				currline = ""
-				diff = 0
-				oldLineCopy = ""
+				c.executeLine()
 			case tb.KeyCtrlC:
-				running = false
+				c.running = false
 			case tb.KeyBackspace, tb.KeyBackspace2:
-				if len(currline) > 0 {
+				if len(c.currline) > 0 {
 					c.backspace()
-					currline = currline[:len(currline)-1]
+					c.currline = c.currline[:len(c.currline)-1]
 				}
 			case tb.KeyArrowUp:
-				if buffer_size+diff > 0 && bufferIdx+diff > 0 {
-					if diff == 0 {
-						oldLineCopy = currline
-					}
-					diff--
-					for _ = range currline {
-						c.backspace()
-					}
-					currline = lineBuffer[(bufferIdx+diff)%buffer_size]
-					c.Print(currline)
-				}
+				c.doArrowUp()
 			case tb.KeyArrowDown:
-				if diff < -1 {
-					diff++
-					for _ = range currline {
-						c.backspace()
-					}
-					currline = lineBuffer[(bufferIdx+diff)%buffer_size]
-					c.Print(currline)
-				} else if diff == -1 {
-					diff++
-					for _ = range currline {
-						c.backspace()
-					}
-					currline = oldLineCopy
-					c.Print(currline)
-				}
+				c.doArrowDown()
 			case tb.KeyTab:
-				if c.completer != nil {
-					prefix, options := c.completer.Complete(currline)
-
-					if len(options) > 1 {
-						for _ = range currline {
-							c.backspace()
-						}
-						currline = prefix
-						c.Print(currline)
-						c.Println("")
-						for _, option := range options {
-							c.Println(option)
-						}
-						c.Print(c.prompt)
-						c.Print(currline)
-					} else if len(options) == 1 {
-						for _ = range currline {
-							c.backspace()
-						}
-						currline = prefix
-						c.Print(currline)
-					}
-
-				}
+				c.doTabCompletion()
 			}
 		}
+	}
+}
+
+func (c *Console) executeLine() {
+	c.Println("")
+	if c.executer != nil {
+		_, c.running = c.executer.Execute(c.currline)
+	}
+	c.Print(c.prompt)
+	if len(c.currline) > 0 {
+		c.lineBuffer[c.bufferIdx%buffer_size] = c.currline
+		c.bufferIdx++
+	}
+	c.currline = ""
+	c.diff = 0
+	c.oldLineCopy = ""
+}
+
+func (c *Console) doArrowDown() {
+	if c.diff < -1 {
+		c.diff++
+		c.clearLine()
+		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%buffer_size]
+		c.Print(c.currline)
+	} else if c.diff == -1 {
+		c.diff++
+		c.clearLine()
+		c.currline = c.oldLineCopy
+		c.Print(c.currline)
+	}
+}
+
+func (c *Console) doArrowUp() {
+	if buffer_size+c.diff > 0 && c.bufferIdx+c.diff > 0 {
+		if c.diff == 0 {
+			c.oldLineCopy = c.currline
+		}
+		c.diff--
+		c.clearLine()
+		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%buffer_size]
+		c.Print(c.currline)
+	}
+}
+
+func (c *Console) doTabCompletion() {
+	if c.completer != nil {
+		prefix, options := c.completer.Complete(c.currline)
+
+		if len(options) > 1 {
+			c.clearLine()
+			c.currline = prefix
+			c.Print(c.currline)
+			c.Println("")
+			c.printOptions(options)
+			c.Print(c.prompt)
+			c.Print(c.currline)
+		} else if len(options) == 1 {
+			c.clearLine()
+			c.currline = prefix
+			c.Print(c.currline)
+		}
+	}
+}
+
+func (c *Console) printOptions(options []string) {
+	sort.Strings(options)
+	maxLen := 0
+	for _, option := range options {
+		if l := len(option); maxLen < l {
+			maxLen = l
+		}
+	}
+	numColumns := (c.width + column_pad) / (maxLen + column_pad)
+	if numColumns == 0 {
+		numColumns++
+	}
+	printed := 0
+	for _, option := range options {
+		c.Print(option)
+		for i := len(option); i < maxLen+column_pad; i++ {
+			c.Print(" ")
+		}
+		printed++
+		if printed%numColumns == 0 {
+			c.Println("")
+		}
+	}
+	if printed%numColumns != 0 {
+		c.Println("")
 	}
 }

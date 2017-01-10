@@ -35,6 +35,8 @@ func (c *Console) Println(str string) {
 	tb.SetCell(c.cursorX, c.cursorY, ' ', tb.ColorWhite, tb.ColorWhite)
 }
 
+// The equivalent of pressing the backspace key.
+// Moves the cursor one cell back, then deletes the value under the cursor.
 func (c *Console) backspace() {
 	tb.SetCell(c.cursorX, c.cursorY, ' ', tb.ColorDefault, tb.ColorDefault)
 	c.cursorX--
@@ -45,6 +47,15 @@ func (c *Console) backspace() {
 	tb.SetCell(c.cursorX, c.cursorY, ' ', tb.ColorWhite, tb.ColorWhite)
 }
 
+// Clear all text to the left of the current line's prompt string.
+func (c *Console) clearLine() {
+	for _ = range c.currline {
+		c.backspace()
+	}
+	c.currline = ""
+}
+
+// Scroll down one cell on the console.
 func (c *Console) scrollDown() {
 	buffer := tb.CellBuffer()
 	tbWidth, _ := tb.Size()

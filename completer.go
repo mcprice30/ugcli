@@ -3,12 +3,11 @@ package ugcli
 
 // The Completer interface will be used in the future
 // to allow tab-completion in an ugCLI console.
-
 type Completer interface {
-	Complete(input string) (string, []string)
+	Complete(input string) (prefix string, recommendations []string)
 }
 
-type ListCompleter struct {
+type listCompleter struct {
 	head *lcNode
 	list []string
 }
@@ -38,13 +37,13 @@ func CreateListCompleter(list []string) Completer {
 		n.end = true
 	}
 
-	return &ListCompleter{
+	return &listCompleter{
 		head: head,
 		list: list,
 	}
 }
 
-func (lc *ListCompleter) Complete(input string) (string, []string) {
+func (lc *listCompleter) Complete(input string) (string, []string) {
 	n := lc.head
 	var exists bool
 
@@ -74,26 +73,9 @@ func lcNodeDFS(n *lcNode, running string, prev []string) (string, []string) {
 	} else {
 		return running, prev
 	}
-
 }
 
 type lcNode struct {
 	children map[rune]*lcNode
 	end      bool
-}
-
-func (n *lcNode) String() string {
-	out := ""
-	if n.end {
-		out = "true"
-	} else {
-		out = "false"
-	}
-
-	for c, child := range n.children {
-		out += "\n" + string(c) + ":\n" + child.String()
-	}
-
-	out += "\n\n"
-	return out
 }

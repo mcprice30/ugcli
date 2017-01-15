@@ -12,7 +12,9 @@ type listCompleter struct {
 	list []string
 }
 
-func CreateListCompleter(list []string) Completer {
+// A built in Completer implementation that will complete based on matches
+// in a list of provided words.
+func NewListCompleter(list []string) Completer {
 	head := &lcNode{
 		children: map[rune]*lcNode{},
 		end:      false,

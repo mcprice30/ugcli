@@ -1,5 +1,5 @@
 // ugCLI is a library built atop termbox for creating CLI applications.
-package ugcli
+package console
 
 // Consoles are an ugCLI object that contains prebuilt
 // functionality for building interactive prompts.

@@ -1,5 +1,5 @@
 // ugCLI is a library built atop termbox for creating CLI applications.
-package ugcli
+package console
 
 import (
 	tb "github.com/nsf/termbox-go"
@@ -100,7 +100,7 @@ func (c *Console) Println(str string) {
 // Moves the cursor one cell back, then deletes the value under the cursor.
 func (c *Console) backspace() {
 	loc := c.getCursorLoc()
-	if loc == 0 {
+	if loc <= 0 {
 		return
 	}
 

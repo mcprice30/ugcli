@@ -1,5 +1,5 @@
 // ugCLI is a library built atop termbox for creating CLI applications.
-package ugcli
+package console
 
 import (
 	"sort"
@@ -13,6 +13,7 @@ const column_pad = 2
 // the console.
 func (c *Console) Run() {
 
+	c.promptY = c.cursorY
 	c.Print(c.prompt)
 
 	if c.executer == nil {
@@ -108,6 +109,7 @@ func (c *Console) doTabCompletion() {
 			c.Print(c.currline)
 			c.Println("")
 			c.printOptions(options)
+			c.promptY = c.cursorY
 			c.Print(c.prompt)
 			c.Print(c.currline)
 		} else if len(options) == 1 {

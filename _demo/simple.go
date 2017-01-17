@@ -11,7 +11,7 @@ import (
 
 	tb "github.com/nsf/termbox-go"
 
-	"github.com/mcprice30/ugcli"
+	"github.com/mcprice30/ugcli/console"
 )
 
 func main() {
@@ -28,9 +28,9 @@ func main() {
 
 	// Create a new console taking the size of the terminal.
 	w, h := tb.Size()
-	con := ugcli.NewConsole(0, 0, w, h)
+	con := console.NewConsole(0, 0, w, h)
 
-	completer := ugcli.NewListCompleter([]string{"a", "ab", "abc", "bad",
+	completer := console.NewListCompleter([]string{"a", "ab", "abc", "bad",
 		"carrot", "jane", "jack"})
 
 	con.SetCompleter(completer)

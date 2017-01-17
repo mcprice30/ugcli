@@ -2,8 +2,6 @@
 package ugcli
 
 import (
-	"fmt"
-
 	tb "github.com/nsf/termbox-go"
 )
 
@@ -67,17 +65,14 @@ func (c *Console) insertChar(ch rune) {
 	cX := c.cursorX
 	cY := c.cursorY
 	tb.SetCell(cX, cY, ch, tb.ColorDefault, tb.ColorDefault)
-	fmt.Println(cX, cY, "INSERT", loc)
 	c.incrementCursor()
 
 	for i := loc; i < len(c.currline); i++ {
-		fmt.Println(i, len(c.currline), c.currline[i])
 		tb.SetCell(c.cursorX, c.cursorY, rune(c.currline[i]), tb.ColorDefault, tb.ColorDefault)
 		c.incrementCursor()
 	}
 	c.cursorX = cX
 	c.cursorY = cY
-	fmt.Println(c.currline[:loc], "|", ch, "|", c.currline[loc:])
 	c.currline = c.currline[:loc] + string(ch) + c.currline[loc:]
 	c.moveCursorRight()
 }
@@ -104,9 +99,31 @@ func (c *Console) Println(str string) {
 // The equivalent of pressing the backspace key.
 // Moves the cursor one cell back, then deletes the value under the cursor.
 func (c *Console) backspace() {
+	loc := c.getCursorLoc()
+	if loc == 0 {
+		return
+	}
+
+	cX := c.cursorX
+	cY := c.cursorY
+
+	for i := loc; i+1 < len(c.currline); i++ {
+		tb.SetCell(c.cursorX, c.cursorY, rune(c.currline[i+1]), tb.ColorDefault, tb.ColorDefault)
+		c.incrementCursor()
+	}
 	tb.SetCell(c.cursorX, c.cursorY, ' ', tb.ColorDefault, tb.ColorDefault)
-	c.decrementCursor()
-	tb.SetCell(c.cursorX, c.cursorY, ' ', tb.ColorWhite, tb.ColorWhite)
+
+	if loc == 1 {
+		c.currline = c.currline[loc:]
+	} else if loc == len(c.currline) {
+		c.currline = c.currline[:loc-1]
+	} else {
+		c.currline = c.currline[:loc-1] + c.currline[loc:]
+	}
+
+	c.cursorX = cX
+	c.cursorY = cY
+	c.moveCursorLeft()
 }
 
 // Clear all text to the left of the current line's prompt string.

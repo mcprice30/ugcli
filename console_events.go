@@ -33,15 +33,15 @@ func (c *Console) Run() {
 			case tb.KeySpace:
 				c.insertChar(' ')
 			case tb.KeyEnter:
+				for i := c.getCursorLoc(); i < len(c.currline); i++ {
+					c.moveCursorRight()
+				}
 				c.executeLine()
 				c.promptY = c.cursorY
 			case tb.KeyCtrlC:
 				c.running = false
 			case tb.KeyBackspace, tb.KeyBackspace2:
-				if c.getCursorLoc() > 0 {
-					c.backspace()
-					c.currline = c.currline[:len(c.currline)-1]
-				}
+				c.backspace()
 			case tb.KeyArrowUp:
 				c.doArrowUp()
 			case tb.KeyArrowDown:

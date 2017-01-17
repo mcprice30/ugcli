@@ -29,17 +29,16 @@ func (c *Console) Run() {
 		if event.Type == tb.EventKey {
 			switch event.Key {
 			case 0:
-				c.writeChar(event.Ch)
-				c.currline += string(event.Ch)
+				c.insertChar(event.Ch)
 			case tb.KeySpace:
-				c.writeChar(' ')
-				c.currline += " "
+				c.insertChar(' ')
 			case tb.KeyEnter:
 				c.executeLine()
+				c.promptY = c.cursorY
 			case tb.KeyCtrlC:
 				c.running = false
 			case tb.KeyBackspace, tb.KeyBackspace2:
-				if len(c.currline) > 0 {
+				if c.getCursorLoc() > 0 {
 					c.backspace()
 					c.currline = c.currline[:len(c.currline)-1]
 				}
@@ -49,6 +48,10 @@ func (c *Console) Run() {
 				c.doArrowDown()
 			case tb.KeyTab:
 				c.doTabCompletion()
+			case tb.KeyArrowRight:
+				c.moveCursorRight()
+			case tb.KeyArrowLeft:
+				c.moveCursorLeft()
 			}
 		}
 	}

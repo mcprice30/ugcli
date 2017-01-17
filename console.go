@@ -18,6 +18,7 @@ type Console struct {
 	cursorX  int
 	cursorY  int
 	prompt   string
+	promptY  int
 	currline string
 
 	executer  Executer
@@ -41,6 +42,7 @@ func NewConsole(top, left, width, height int) *Console {
 		height:      height,
 		cursorX:     left,
 		cursorY:     top,
+		promptY:     top,
 		prompt:      default_prompt,
 		currline:    "",
 		diff:        0,

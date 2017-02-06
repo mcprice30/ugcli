@@ -11,6 +11,7 @@ import (
 
 	tb "github.com/nsf/termbox-go"
 
+	"github.com/mcprice30/ugcli"
 	"github.com/mcprice30/ugcli/console"
 )
 
@@ -35,8 +36,11 @@ func main() {
 
 	con.SetCompleter(completer)
 
+	cli := ugcli.NewCli()
+	cli.AddComponent(con)
+
 	// Launch the terminal.
-	con.Run()
+	cli.Run()
 
 	// Close the termbox session when done.
 	tb.Close()

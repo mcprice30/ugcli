@@ -5,13 +5,15 @@ import (
 	"sort"
 
 	tb "github.com/nsf/termbox-go"
+
+	"github.com/mcprice30/ugcli"
 )
 
 const column_pad = 2
 
 // Call this to launch the console. Main activity loop for
 // the console.
-func (c *Console) Run() {
+func (c *Console) Run(eq *ugcli.EventQueue) {
 
 	c.promptY = c.cursorY
 	c.Print(c.prompt)
@@ -26,7 +28,7 @@ func (c *Console) Run() {
 			panic(err)
 		}
 
-		event := tb.PollEvent()
+		event := eq.PollEvent()
 		if event.Type == tb.EventKey {
 			switch event.Key {
 			case 0:

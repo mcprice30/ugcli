@@ -1,5 +1,7 @@
-// ugCLI is a library built atop termbox for creating CLI applications.
 package console
+
+// console_events.go contains utility functions to handle termbox events within
+// a console component.
 
 import (
 	"sort"
@@ -11,24 +13,31 @@ import (
 
 const column_pad = 2
 
-// Call this to launch the console. Main activity loop for
-// the console.
+// Run will be called to launch the console. It serves as the main activity
+// loop for the console, and implements the component interface, allowing
+// consoles to be embedded within an ugcli application.
 func (c *Console) Run(eq *ugcli.EventQueue) {
 
-	c.promptY = c.cursorY
+	// Print the prompt for the first time.
 	c.Print(c.prompt)
 
+	// If we don't have an executer specified, simply use an echo executer.
 	if c.executer == nil {
 		c.executer = DefaultExecuter(c)
 	}
 
+	// Loop until finished.
 	for c.running {
 
+		// In the event of an error, panic.
 		if err := tb.Flush(); err != nil {
 			panic(err)
 		}
 
+		// Get an event from the event queue.
 		event := eq.PollEvent()
+
+		// Delegate to the appropriate helper.
 		if event.Type == tb.EventKey {
 			switch event.Key {
 			case 0:
@@ -60,6 +69,8 @@ func (c *Console) Run(eq *ugcli.EventQueue) {
 	}
 }
 
+// executeLine will execute the current line, go to a new line, and print a
+// prompt for the next line.
 func (c *Console) executeLine() {
 	c.Println("")
 	if c.executer != nil {
@@ -67,7 +78,7 @@ func (c *Console) executeLine() {
 	}
 	c.Print(c.prompt)
 	if len(c.currline) > 0 {
-		c.lineBuffer[c.bufferIdx%buffer_size] = c.currline
+		c.lineBuffer[c.bufferIdx%bufferSize] = c.currline
 		c.bufferIdx++
 	}
 	c.currline = ""
@@ -75,11 +86,13 @@ func (c *Console) executeLine() {
 	c.oldLineCopy = ""
 }
 
+// doArrowDown will set the current line to a more recently executed command,
+// or what the user was typing before pressing the up arrow, if applicable.
 func (c *Console) doArrowDown() {
 	if c.diff < -1 {
 		c.diff++
 		c.clearLine()
-		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%buffer_size]
+		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%bufferSize]
 		c.Print(c.currline)
 	} else if c.diff == -1 {
 		c.diff++
@@ -89,18 +102,21 @@ func (c *Console) doArrowDown() {
 	}
 }
 
+// doArrowUp will set the current line to a less recently executed command.
 func (c *Console) doArrowUp() {
-	if buffer_size+c.diff > 0 && c.bufferIdx+c.diff > 0 {
+	if bufferSize+c.diff > 0 && c.bufferIdx+c.diff > 0 {
 		if c.diff == 0 {
 			c.oldLineCopy = c.currline
 		}
 		c.diff--
 		c.clearLine()
-		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%buffer_size]
+		c.currline = c.lineBuffer[(c.bufferIdx+c.diff)%bufferSize]
 		c.Print(c.currline)
 	}
 }
 
+// doTabCompletion will ask the user-defined completer for recommendations
+// for the current line, before displaying them, if applicable.
 func (c *Console) doTabCompletion() {
 	if c.completer != nil {
 		prefix, options := c.completer.Complete(c.currline)
@@ -122,6 +138,8 @@ func (c *Console) doTabCompletion() {
 	}
 }
 
+// printOptions is a utility function that will print a variety of strings
+// in columns.
 func (c *Console) printOptions(options []string) {
 	sort.Strings(options)
 	maxLen := 0
